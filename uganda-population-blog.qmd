@@ -1,0 +1,13 @@
+---
+title: "What The Numbers Mean for Jobs, the Future, and Why Today’s 30-Year-Olds Hold the Biggest Advantage"
+author: "Mwanje Ronald Steve"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    theme: cosmo
+    code-fold: true
+execute:
+  echo: false
+  warning: false
+---

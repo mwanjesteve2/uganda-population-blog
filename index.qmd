@@ -1,0 +1,770 @@
+---
+title: "What The Numbers Mean for Jobs, the Future, and Why Today’s 30-Year-Olds Hold the Biggest Advantage"
+author: "Mwanje Ronald Steve"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    theme: cosmo
+    code-fold: true
+execute:
+  echo: false
+  warning: false
+---
+*Originally published at:*  
+https://steveronaldmwanje.blogspot.com/2025/12/a-python-ugandas-population-analysis.html
+
+## Introduction
+
+When I fed Uganda’s 2024 National Population and Housing Census into Python, the numbers didn’t just confirm what we suspected, they screamed it.
+
+Uganda is one of the youngest and fastest-growing nations on Earth. In May 2024, the population stood at **45.9 million**, and by December 2025 it had surged to **51.4 million**, growing at **2.9% annually**.
+
+These numbers are not just statistics, they tell a story about jobs, pressure, opportunity, and timing.
+
+---
+
+## 1. Uganda Today: A Nation in Motion and Getting Younger
+
+Uganda is growing fast, yes! but it’s still largely rural. **66%** of Ugandans live outside towns, rooted in farming and community life. Every morning, though Kampala swells to more than **2.5 million people**, a reminder of how hard we hustle for work and opportunity🏙️.
+But the real story is in the age breakdown, our national heartbeat:
+
+```{python}
+import matplotlib.pyplot as plt
+import pandas as pd
+# -------------------------
+# Step 1: Input statistics
+# -------------------------
+population_2025 = 51_400_000  # estimated total population for 2025
+
+# Provided core percentages (we use midpoints where you gave ranges)
+under18_pct = 49.9          # % under 18
+under20_pct = 55.5          # midpoint of 55–56% (used to compute the 18-19 group)
+under30_pct = 74.0          # midpoint of 73–75% (used to compute 20-29 group)
+sixty_plus_pct = 5.0        # % aged 60+
+
+# Derived segments (percent)
+ages_18_19_pct = under20_pct - under18_pct        # 18-19
+ages_20_29_pct = under30_pct - under20_pct        # 20-29
+ages_30_59_pct = 100.0 - (under30_pct + sixty_plus_pct)  # 30-59 (remainder)
+
+# Put into an ordered dict-like structure for plotting
+segments = {
+    "Under 18 (0-17)": under18_pct,
+    "Ages 18-19": ages_18_19_pct,
+    "Ages 20-29": ages_20_29_pct,
+    "Ages 30-59": ages_30_59_pct,
+    "Aged 60+": sixty_plus_pct
+    }
+# Convert to approximate absolute counts
+segments_abs = {k: int(round(v/100.0 * population_2025)) for k, v in segments.items()}
+
+# Additional context stats
+rural_pct = 66.0                   # 66% living outside towns
+kampala_day_population = 2_500_000 # Kampala swells to ~2.5 million during the day
+
+# Optional: small DataFrame to verify numbers
+df = pd.DataFrame([
+    {"Segment": k, "Percent (%)": v, "Absolute (approx)": segments_abs[k]}
+    for k, v in segments.items()
+])
+print(df.to_string(index=False))
+
+### Age Structure Snapshot
+# -------------------------
+# Step 2: Plot single visual (donut)
+# -------------------------
+labels = list(segments.keys())
+sizes = [segments[k] for k in labels]
+
+# Catchy colors (you asked for catchy colors explicitly)
+colors = [
+    "#ff6b6b",  # coral red
+    "#ffd93d",  # warm yellow
+    "#6BCB77",  # fresh green
+    "#4D96FF",  # bright blue
+    "#9D94FF"   # soft violet
+]
+
+fig, ax = plt.subplots(figsize=(10, 8))
+
+# Donut chart: pie with width to create a hole
+wedges, texts = ax.pie(
+    sizes,
+    labels=None,               # we'll use a legend instead of label clutter
+    startangle=140,
+    wedgeprops=dict(width=0.4, edgecolor='white'),
+    colors=colors
+)
+
+# Build legend entries showing percent + approximate absolute count
+legend_labels = [
+    f"{label}\n{sizes[i]:.1f}% (~{segments_abs[label]:,})"
+    for i, label in enumerate(labels)
+]
+ax.legend(wedges, legend_labels, title="Age segments", loc="center left", bbox_to_anchor=(1, 0.5))
+
+# Central text summarizing key context
+center_text = (
+    f"Uganda (est. 2025)\nTotal pop: {population_2025:,}\n\n"
+    f"Rural: {rural_pct:.0f}% live outside towns\n"
+    f"Kampala (day): ~{kampala_day_population:,}\n"
+    f"Aged 60+: {sixty_plus_pct:.1f}%"
+)
+ax.text(0, 0, center_text, ha='center', va='center', fontsize=11, weight='semibold')
+
+ax.set_title("Uganda's Population Snapshot — Age Structure & Key Context", fontsize=14, weight='bold')
+plt.tight_layout()
+
+# Save the chart (optional) and show
+output_path = "uganda_population_snapshot_donut.png"
+plt.savefig(output_path, dpi=150, bbox_inches='tight')
+plt.show()
+
+# python code here
+```
+
+- **49.9%** below 18  
+- **55%+** below 20  
+- **73–75%** below 30  
+- **Only 5%** aged 60+
+
+
+This is a massive youth wave in Uganda’s; Is this a greatest blessing or biggest test!
+Put simply: if you walk into any gathering, church, market, classroom, taxi park, three out of every four faces you see belong to someone under 30**.
+
+On the bright side, we have an energetic, ambitious workforce capable of transforming the nation. But if innovation and entrepreneurship don’t rise fast enough, Uganda will feel the weight of growing unemployment, rising frustration, and underutilized potential. A youthful population without opportunity is like pressure steaming inside a sealed pot, eventually something gives.
+
+Uganda’s next chapter will be shaped by builders, risk-takers, creators, and problem-solvers who convert this youthful momentum into true productive power🛠️.
+
+---
+
+## 2. Youth vs Older Adults (35+): The Population Gap
+
+Uganda’s demographic pyramid isn’t a pyramid at all, it’s a tower of youth. Our median age sits at just **16–17 years**, one of the lowest worldwide.
+
+```{python}
+import matplotlib.pyplot as plt
+
+def create_uganda_demographics_chart():
+    # ---------------------------------------------------------
+    # 1. SETUP DATA
+    # ---------------------------------------------------------
+    
+    # Broad Categories (Inner Ring)
+    # 78-80% Youth, 20-22% Adults. Using 80/20 for clean visual proportions.
+    broad_labels = ['Youth (<35)\n~80%', 'Adults (35+)\n~20%']
+    broad_sizes = [80, 20]
+    # Colors: Warm Orange for Youth, Cool Blue for Adults
+    broad_colors = ['#FF9F43', '#54a0ff'] 
+
+    # Specific Categories (Outer Ring)
+    # Breakdowns: Children (43) + Adolescents (11) + Young Adults (26) = 80
+    # Breakdowns: Working Adults (17) + Seniors (3) = 20
+    specific_labels = [
+        'Children (0-14)\n43%', 
+        'Adolescents (15-19)\n11%', 
+        'Young Adults (20-34)\n26%', 
+        'Working Adults (35-64)\n17%', 
+        'Seniors (65+)\n3%'
+    ]
+    specific_sizes = [43, 11, 26, 17, 3]
+
+    # "Catchy" Vibrant Colors for Outer Ring
+    specific_colors = [
+        '#ee5253', # Red-ish (Children)
+        '#feca57', # Yellow (Adolescents)
+        '#ff9f43', # Orange (Young Adults) - Matches inner Youth theme
+        '#2e86de', # Blue (Working Adults) - Matches inner Adult theme
+        '#1dd1a1'  # Green (Seniors)
+    ]
+
+    # ---------------------------------------------------------
+    # 2. CREATE PLOT
+    # ---------------------------------------------------------
+    fig, ax = plt.subplots(figsize=(14, 9))
+    fig.patch.set_facecolor('#f5f6fa') # Light grey background
+
+    # Plot Outer Ring (Detailed)
+    # radius=1.0 is the full size
+    wedges_out, texts_out = ax.pie(specific_sizes, radius=1.0, colors=specific_colors, 
+                                   wedgeprops=dict(width=0.3, edgecolor='white'), startangle=90)
+
+    # Plot Inner Ring (Broad)
+    # radius=0.7 fits inside the outer ring
+    wedges_in, texts_in = ax.pie(broad_sizes, radius=0.7, colors=broad_colors, 
+                                 labels=broad_labels, labeldistance=0.6,
+                                 wedgeprops=dict(width=0.3, edgecolor='white'), startangle=90,
+                                 textprops={'fontsize': 12, 'weight': 'bold', 'color': 'white'})
+
+    # ---------------------------------------------------------
+    # 3. ANNOTATIONS & DETAILS
+    # ---------------------------------------------------------
+    
+    # Add a white circle at the center to make it a "Donut"
+    centre_circle = plt.Circle((0,0), 0.4, fc='white')
+    fig.gca().add_artist(centre_circle)
+
+    # Center Text: Median Age
+    ax.text(0, 0, "Median Age\n16-17\nYears", ha='center', va='center', 
+            fontsize=16, fontweight='bold', color='#222f3e')
+
+    # Legend for the specific groups
+    ax.legend(wedges_out, specific_labels,
+              title="Demographic Groups",
+              loc="center left",
+              bbox_to_anchor=(1, 0, 0.5, 1))
+
+    # Text Box 1: Under 18 Stat (Top Left)
+    stat_text_1 = (
+        "THE UNDER-18 GROUP\n"
+        "Contributes 49.9% of the population"
+    )
+    props1 = dict(boxstyle='round', facecolor='#ff6b6b', alpha=0.15)
+    ax.text(-1.6, 1.0, stat_text_1, fontsize=11, bbox=props1, fontweight='bold')
+
+    # Text Box 2: Dependency Ratio (Bottom Left)
+    stat_text_2 = (
+        "HIGH PRESSURE\n"
+        "Dependency Ratio: 83.8\n"
+        "(Dependents per 100 working-age)"
+    )
+    props2 = dict(boxstyle='round', facecolor='#5f27cd', alpha=0.15)
+    ax.text(-1.6, -0.8, stat_text_2, fontsize=11, bbox=props2, fontweight='bold')
+
+    # Text Box 3: Population Context (Bottom Right)
+    stat_text_3 = (
+        "POPULATION ESTIMATES\n"
+        "Youth (<35): ~40-41 Million\n"
+        "Adults (35+): ~10-11 Million"
+    )
+    props3 = dict(boxstyle='round', facecolor='#222f3e', alpha=0.1)
+    ax.text(1.2, -0.8, stat_text_3, fontsize=11, bbox=props3)
+
+    # Final Title
+    plt.title("Uganda's Demographic Profile (2024-2025 Estimates)", 
+              fontsize=20, fontweight='bold', color='#222f3e', pad=20)
+
+    plt.tight_layout()
+    plt.savefig('uganda_demographics.png') # Saves the image
+    plt.show()
+
+# Run the function
+create_uganda_demographics_chart()
+# python code here
+```
+
+•	**0–14 years: ~43%**
+•	**15–19 years: ~11%**
+•	**20–34 years: 25–26%**
+•	**Under 18s: 49.9%**
+•	**Adults 35+: only 20–22% (10–11 million people)**
+o	**Working-age adults 35–64: ~17%**
+o	**Seniors 65+: 3–4%**
+•	**Dependency ratio**: **83.8 dependents for every 100 earners**
+
+This sharp gulf between a massive youth population and a small adult base paints a clear picture: the responsibility resting on the shoulders of those above 30 is enormous.
+This is exactly why Ugandans above 30 hold **the strategic steering wheel of the economy**. They have experience, networks, decision-making power, and the responsibility to shape opportunities for the millions coming behind them. And Uganda simply cannot afford a mindset that waits for donors, searches for rare jobs, or clings to traditional employment.
+
+With millions entering the labour market every few years, creation, not only competition must define the future. The real question is simple: "What can today’s adults build that will unlock the potential of Uganda’s huge youth base?"
+Because at the end of the day, **Uganda’s GDP** will not be determined by the energy of its youth, but by how effectively the older adults channel that energy into opportunity, productivity, and national growth.
+
+
+---
+
+## 3. A Highly Competitive Job Market
+
+**Uganda’s job market** has become a race where thousands join the track every year, but the finish line barely moves. Our population structure, nearly 80% under 35, half under 18, and only 20–22% in older working-age groups, creates a constant overflow of job seekers.
+
+```{python}
+import matplotlib.pyplot as plt
+import numpy as np
+
+# ---- DATA ------------------------------------------------------
+
+# Panel 1: Labour force flow
+categories_flow = ["Finish School (600k+)", "University Grads (130k)", "New Jobs (90–120k)"]
+values_flow = [600000, 130000, 100000]
+
+# Panel 2: Youth unemployment
+categories_unemp = ["Official Youth Unemployment (42%)", 
+                    "General Range (13–70%)", 
+                    "NEET Youth 18–30 (41%)"]
+values_unemp = [42, 70, 41]
+
+# Panel 3: Education dropout/completion
+levels = ["Primary", "O-Level", "A-Level"]
+dropout = [0.45, 0.40, 0.88]      # midpoints
+completion = [0.55, 0.60, 0.12]   # midpoints
+
+# ---- COLOR PALETTE ---------------------------------------------
+
+colors_flow = ["#1f77b4", "#ff7f0e", "#2ca02c"]
+colors_unemp = ["#d62728", "#9467bd", "#8c564b"]
+colors_ed_drop = ["#e377c2"] * 3
+colors_ed_comp = ["#17becf"] * 3
+
+# ---- FIGURE SETUP ----------------------------------------------
+
+fig = plt.figure(figsize=(14, 10))
+
+# ================================================================
+# PANEL 1 — Labour Force Mismatch
+# ================================================================
+ax1 = plt.subplot(2, 2, 1)
+ax1.bar(categories_flow, values_flow, color=colors_flow)
+ax1.set_title("Annual School Leavers vs New Jobs")
+ax1.set_ylabel("People")
+ax1.set_xticklabels(categories_flow, rotation=30, ha="right")
+
+for i, val in enumerate(values_flow):
+    ax1.text(i, val + 20000, f"{val:,}", ha='center')
+
+# ================================================================
+# PANEL 2 — Youth Unemployment
+# ================================================================
+ax2 = plt.subplot(2, 2, 2)
+ax2.bar(categories_unemp, values_unemp, color=colors_unemp)
+ax2.set_title("Youth Unemployment Levels")
+ax2.set_ylabel("Percent (%)")
+ax2.set_xticklabels(categories_unemp, rotation=25, ha="right")
+
+for i, val in enumerate(values_unemp):
+    ax2.text(i, val + 2, f"{val}%", ha='center')
+
+# ================================================================
+# PANEL 3 — Education Completion vs Dropout
+# ================================================================
+ax3 = plt.subplot(2, 1, 2)
+width = 0.35
+x = np.arange(len(levels))
+
+ax3.bar(x - width/2, dropout, width, label="Dropout Rate", color=colors_ed_drop)
+ax3.bar(x + width/2, completion, width, label="Completion Rate", color=colors_ed_comp)
+
+ax3.set_title("Uganda Education Pathway: Dropout vs Completion")
+ax3.set_xticks(x)
+ax3.set_xticklabels(levels)
+ax3.set_ylabel("Share of students")
+ax3.legend()
+
+for i, val in enumerate(dropout):
+    ax3.text(i - width/2, val + 0.02, f"{int(val*100)}%", ha='center')
+
+for i, val in enumerate(completion):
+    ax3.text(i + width/2, val + 0.02, f"{int(val*100)}%", ha='center')
+
+# ---- MAIN TITLE -------------------------------------------------
+plt.suptitle(
+    "Uganda Youth Labour Force, Unemployment, and Education Outcomes\n"
+    "(Combined Statistical Graphic — Catchy Colors)",
+    fontsize=16, weight='bold'
+)
+
+plt.tight_layout(rect=[0, 0, 1, 0.94])
+plt.show()
+# python code here
+```
+
+Each year:
+- **600,000+** youth leave school
+- **130,000** university graduates enter the market
+- Only **90,000–120,000** jobs are created
+- **Youth unemployment exceeds 42%** (NEET - Not in Employment, Education, or Training)
+
+Economically, the warning is clear🚨:
+•	Every 1% rise in youth unemployment drags national GDP down by **0.45%**
+This pressure means one thing:
+•	Opportunity in Uganda will not be found, it must be created.
+•	Innovation and entrepreneurship are becoming survival tools, not buzzwords.
+
+---
+
+## 4. Uganda in 2045: Population Outlook
+
+If the current 2.9% annual growth rate holds, the country will reach about **70 million** people by 2044 and push toward **80 - 85 million** by 2050. Even with fertility slowly falling to 2 - 3 children per woman, Uganda is still on track to double its population by the mid-2040s
+
+```{python}
+
+# Population projection with calculation steps + annotated plot
+import numpy as np
+import matplotlib.pyplot as plt
+import math
+
+# -------------------------
+# CONFIGURABLE PARAMETERS
+# -------------------------
+start_year = 2025
+start_pop = 51.4        # in millions
+r = 0.029               # 2.9% annual growth
+end_year = 2055
+targets = [70, 80, 85]
+
+# -------------------------
+# HELPER FUNCTIONS
+# -------------------------
+years = np.arange(start_year, end_year + 1)
+n_years = years - start_year
+populations = start_pop * (1 + r) ** n_years
+
+def population_at(year):
+    t = year - start_year
+    return start_pop * (1 + r) ** t
+
+def year_to_reach(target):
+    t = math.log(target / start_pop) / math.log(1 + r)
+    return start_year + t
+
+# -------------------------
+# PRINT CALCULATIONS
+# -------------------------
+print(f"Compound growth formula used: P(t) = P0 * (1 + r)^t")
+print(f"P0 = {start_pop} million (in {start_year}), r = {r*100:.2f}% per year\n")
+
+y1, y2 = 2044, 2050
+p_y1 = population_at(y1)
+p_y2 = population_at(y2)
+
+print(f"Population projection:")
+print(f" - In {y1}: {p_y1:.2f} million")
+print(f" - In {y2}: {p_y2:.2f} million\n")
+
+for tgt in targets:
+    yr = year_to_reach(tgt)
+    year_int = int(math.floor(yr))
+    months = int(round((yr - year_int) * 12))
+    print(f" - Target {tgt}M reached around: {yr:.3f} (approx {year_int} + {months} months)")
+
+# -------------------------
+# PLOT (NO SEABORN)
+# -------------------------
+plt.style.use('ggplot')   # <- SAFE BUILT-IN STYLE
+
+fig, ax = plt.subplots(figsize=(11,6))
+
+# Population line
+ax.plot(years, populations, linewidth=3, marker='o',
+        color='#1f77b4', label=f'Projection (r={r*100:.2f}%)')
+
+# Mark 2044 and 2050
+ax.scatter([y1, y2], [p_y1, p_y2], color='#d62728', zorder=5)
+ax.annotate(f"{y1}: {p_y1:.2f}M", xy=(y1, p_y1), xytext=(y1+0.6, p_y1+4),
+            arrowprops=dict(arrowstyle="->", color="#d62728"), color="#d62728")
+ax.annotate(f"{y2}: {p_y2:.2f}M", xy=(y2, p_y2), xytext=(y2-6.5, p_y2+6),
+            arrowprops=dict(arrowstyle="->", color="#d62728"), color="#d62728")
+
+# Target lines
+colors_targets = ['#ff7f0e', '#2ca02c', '#9467bd']
+for tgt, c in zip(targets, colors_targets):
+    ax.axhline(y=tgt, color=c, linestyle='--', linewidth=1)
+    yr_cross = year_to_reach(tgt)
+    ax.plot(yr_cross, tgt, marker='D', color=c)
+    ax.text(yr_cross + 0.3, tgt + 1.2, f"{tgt}M reached ≈ {yr_cross:.2f}", color=c, fontsize=9)
+
+# Formula annotation
+formula_text = "P(t) = P₀ × (1 + r)^t\n(t = years since 2025)"
+ax.text(0.02, 0.95, formula_text, transform=ax.transAxes,
+        fontsize=11, bbox=dict(facecolor='white', alpha=0.8),
+        verticalalignment='top')
+
+# Labels and formatting
+ax.set_xlabel("Year", fontsize=12)
+ax.set_ylabel("Population (millions)", fontsize=12)
+ax.set_title(f"Population projection at {r*100:.2f}% annual growth\nBaseline: {start_pop}M in {start_year}",
+             fontsize=14, weight='bold')
+
+ax.set_xlim(start_year - 0.5, end_year + 0.5)
+ax.set_ylim(0, max(populations) * 1.06)
+
+ax.legend(loc='upper left')
+plt.tight_layout()
+plt.show()
+# python code here
+```
+
+Here’s how the population shifts:
+•	Today’s 18 million youth **(15–34 years)** will become the **35–54-year** workforce in 2045.
+•	Today’s children under 15 will become the next wave of young adults.
+•	Seniors grow slightly to **5–7%**, but Uganda will avoid the aging crisis seen in Europe or Japan.
+This isn’t a burden, it’s a massive opportunity.
+If Uganda invests now in education, skills, innovation, and productivity, this youthful workforce can unlock a 1–2% annual GDP boost, a true demographic dividend💰.
+Countries like South Korea and Singapore used population momentum to reinvent their economies. Uganda stands at the same crossroads, ready to power digital services, agriculture, supply chains, energy, transport, education, fintech, and technology-driven growth.
+The question is no longer whether Uganda can rise.
+The real question is: "Will we seize the advantage of our youthful population?"
+
+---
+
+## 5.🌟Why Ugandans in Their 30s Hold the Advantage
+
+Ugandans in their 30s, about 6–7 million people, are standing at the sweet spot of opportunity.
+Why?
+- They’re entering their peak earning years (30–55).
+- They have 25+ productive years ahead to build wealth, mentor youth, and make bold moves.
+- They can own the businesses that a fast-growing population will depend on, food, housing, education, transport, digital services, energy, logistics, and healthcare.
+- As job competition skyrockets toward 2044, they are best positioned to be employers, not job seekers.
+
+Where should today’s 30-year-olds invest? The data points to booming sectors:
+### High-Growth Sectors
+- 🌾 Agriculture & Agribusiness:- Food demand will double by 2045. Think commercial farming, poultry, dairy, feeds, food processing, cold storage, and irrigation.
+- 🏘️Real Estate & Housing:- Urban populations will double—affordable rentals, hostels, land banking, and apartments will be hot.
+- 🎓Education & Skills Training:- With 22.2 million children under 18, the demand for schools, vocational training, EdTech, and digital learning will explode.
+- 🏥Healthcare & Wellness:- Clinics, labs, pharmacies, maternity care, and elder-care services will be in high demand.
+- 💻Technology & Digital Services:- The digital economy is growing at 15% annually, IT support, fintech, e-commerce, digital marketing, coding, AI, VR/AR tools will all thrive.Digital Services & Technology
+- 🚚 Transport & Logistics:- Boda fleets, delivery services, courier companies, warehousing, and cold-chain logistics become essential with a large population.
+- ☀️Renewable Energy:- With electricity access at only 53%, solar systems, mini-grids, and battery solutions are future gold mines.
+
+The next 20 years belong to the builders, not the spectators nor employees.
+
+---
+
+## 🔑Conclusion: Uganda’s Population Is the Opportunity of Our Time
+
+Uganda’s population surge isn’t a crisis, it’s our greatest competitive edge. Yes, the job market will tighten, youth numbers will keep rising, and pressure on food, housing, and services will intensify. But hidden in that pressure is a unique advantage for Ugandans in their 30s today.
+•	You have the experience.
+•	You have the energy.
+•	And you have a massive customer base growing right beneath your feet.
+If you invest now, whether in agriculture, housing, digital services, education, energy, or transport, you’re not just starting a business.You’re claiming your share of the 70–85 million–person economy Uganda is becoming 🚀.
+The future rewards those who prepare early. Uganda’s population isn’t just a statistic. It’s a market, a workforce, a demand curve, and a future business empire waiting for courageous builders.
+
+Let’s build Uganda.
+
+
+
+## APPENDIX
+```{python}
+
+# -------- Plot 2: Pie chart — key population shares --------
+under18_pct = 49.9
+under20_pct = 55.5  # use a midpoint if you prefer 55-56
+under30_pct = 74.0  # midpoint of 73-75
+sixty_plus_pct = 5.0
+
+segments = ["Under 18", "Under 20", "Under 30", "60+ (Older)"]
+segment_values = [under18_pct, under20_pct, under30_pct, sixty_plus_pct]
+segment_colors = ["#2a9d8f", "#e9c46a", "#f4a261", "#264653"]  # nice warm/cool palette
+
+plt.figure(figsize=(8,6))
+plt.pie(segment_values, labels=[f"{s} — {v:.1f}%" for s, v in zip(segments, segment_values)],
+        autopct=None, startangle=140, colors=segment_colors, wedgeprops={"edgecolor":"w", "linewidth":0.8})
+plt.title("Key Population Shares — Under 18, Under 20, Under 30, and 60+ (2024-25)", fontsize=13, weight="bold")
+plt.axis("equal")
+plt.tight_layout()
+plt.show()
+
+# -------- Plot 3: Horizontal bar — under 35 vs 35+ --------
+under35_pct = 78.0  # approximate
+over35_pct = 22.0
+plt.figure(figsize=(8,2.5))
+plt.barh(["Population share"], [under35_pct], color="#2b8cbe", edgecolor="k")
+plt.barh(["Population share"], [over35_pct], left=[under35_pct], color="#de5b6d", edgecolor="k")
+plt.xlim(0,100)
+plt.title("Youth Dominance — Under 35 vs 35 and above (approx.)", fontsize=12, weight="bold")
+plt.xticks(np.arange(0,101,10))
+plt.text(under35_pct/2, 0, f"Under 35: {under35_pct:.0f}%", va="center", ha="center", color="white", fontsize=11, weight="bold")
+plt.text(under35_pct + over35_pct/2, 0, f"35+: {over35_pct:.0f}%", va="center", ha="center", color="white", fontsize=11, weight="bold")
+plt.yticks([])
+plt.tight_layout()
+plt.show()
+
+# Example percentages (use your exact numbers if you prefer)
+age_groups = ["Under 15", "15-19", "20-34", "35-64", "65+"]
+percents = [43, 11, 24, 17, 5]
+# Bar chart for detailed breakdown
+plt.figure(figsize=(8,5))
+plt.bar(age_groups, percents)
+plt.title("Age-group breakdown")
+plt.ylabel("Percent of population")
+for i, v in enumerate(percents):
+    plt.text(i, v+1, f"{v}%")
+plt.savefig("uganda_agegroup_bar.png")
+plt.show()
+
+import matplotlib.pyplot as plt
+years = ["2019", "2020", "2021", "2022", "2023"]
+
+# Midpoint estimates based on your ranges
+entrants = [520000, 540000, 560000, 580000, 600000]      # new job seekers
+jobs_created = [130000, 135000, 140000, 145000, 150000]  # new jobs
+
+# Calculate the job gap for each year
+job_gap = [e - j for e, j in zip(entrants, jobs_created)]
+plt.figure(figsize=(10,6))
+
+# Plot each line (no custom colors unless the user requests)
+plt.plot(years, entrants, marker="o", label="New Job Market Entrants")
+plt.plot(years, jobs_created, marker="o", label="New Jobs Created")
+plt.plot(years, job_gap, marker="o", label="Job Gap (Entrants - Jobs)")
+
+# Labels and title
+plt.title("Uganda Job Market Mismatch Over Time")
+plt.xlabel("Year")
+plt.ylabel("Number of People")
+
+# Add gridlines
+plt.grid(True, linestyle="--", linewidth=0.6)
+
+# Show legend
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(8,2))
+plt.axis('off')
+table = plt.table(cellText=df.values, colLabels=df.columns, loc='center')
+table.auto_set_font_size(False)
+table.set_fontsize(10)
+plt.title("Uganda School Dropout and Completion Rates")
+plt.show()
+
+years = np.arange(2025, 2046)   # 2025–2045
+start_pop = 51.4      # in millions
+growth_rate = 0.025   # 2.5% per year
+population = start_pop * (1 + growth_rate) ** (years - 2025)
+
+alt_growth = 0.029
+population_alt = start_pop * (1 + alt_growth) ** (years - 2025)
+
+plt.figure(figsize=(10,6))
+plt.plot(years, population, marker='o', label="2.5% Growth (Main Scenario)")
+plt.plot(years, population_alt, marker='s', label="2.9% Growth (High Scenario)")
+
+plt.title("Uganda Population Projections: Two Growth Scenarios")
+plt.xlabel("Year")
+plt.ylabel("Population (Millions)")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+workforce_2045 = 52   # midpoint estimate
+workforce = np.linspace(30, workforce_2045, len(years))  # smooth transition
+
+plt.figure(figsize=(10,6))
+plt.plot(years, population, linewidth=2, label="Total Population")
+plt.plot(years, workforce, linestyle='--', linewidth=2, label="Working-Age Population")
+
+plt.title("Population vs Workforce Projection (2025–2045)")
+plt.xlabel("Year")
+plt.ylabel("Millions")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Uganda single-visual age-structure snapshot (NOT a ring)
+# Run in Jupyter or any Python environment with matplotlib & pandas installed.
+# Saves a PNG and prints the saved path.
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+# -----------------------
+# STEP 1: INPUT / ESTIMATES
+# -----------------------
+population_est = 51_400_000  # estimated total population (2025 estimate from your data)
+
+# Percent figures (use supplied values / midpoints)
+pct_under_18 = 49.9     # 0-17
+pct_0_14 = 43.0         # 0-14 (children) approx
+pct_15_19 = 11.0        # adolescents 15-19
+pct_20_34 = 25.5        # young adults 20-34 (midpoint 25-26)
+pct_under_35 = 79.0     # 78-80% -> midpoint 79%
+pct_35_plus = 21.0      # 20-22% -> midpoint 21%
+pct_35_64 = 17.0        # 35-64 ~17%
+pct_65_plus = 4.0       # seniors 65+ ~3-4% -> use 4%
+
+dependency_ratio = 83.8  # dependents per 100 working-age adults
+median_age = "16–17 years"
+
+# -----------------------
+# STEP 2: BUILD SEGMENTS (stacked bar)
+# -----------------------
+segments_pct = {
+    "0-14 (Children)": pct_0_14,
+    "15-19 (Adolescents)": pct_15_19,
+    "20-34 (Young adults)": pct_20_34,
+    "35-64 (Adults)": pct_35_64,
+    "65+ (Seniors)": pct_65_plus
+}
+
+# Fix rounding to sum to 100 if needed
+total_pct = sum(segments_pct.values())
+if abs(total_pct - 100.0) > 1e-6:
+    # Add the tiny diff to the largest segment (keeps visual sums correct)
+    largest = max(segments_pct, key=segments_pct.get)
+    segments_pct[largest] += (100.0 - total_pct)
+
+# Convert to absolute counts
+segments_abs = {k: int(round(v / 100.0 * population_est)) for k, v in segments_pct.items()}
+
+# Build DataFrame for display (optional)
+df = pd.DataFrame([
+    {"Age group": k, "Percent (%)": v, "Approx. count": f"{segments_abs[k]:,}"}
+    for k, v in segments_pct.items()
+])
+
+# Print table (works everywhere)
+print("\nAge-structure summary table:")
+print(df.to_string(index=False))
+
+# -----------------------
+# STEP 3: PLOT (single figure, stacked horizontal bar)
+# -----------------------
+labels = list(segments_pct.keys())
+sizes = [segments_pct[k] for k in labels]
+
+# Catchy palette (user asked for catchy colors)
+colors = ["#FF6B6B", "#FFD93D", "#6BCB77", "#4D96FF", "#9D94FF"]
+
+fig, ax = plt.subplots(figsize=(12, 3.8))
+
+left = 0.0
+for i, (label, size) in enumerate(zip(labels, sizes)):
+    ax.barh(0, size, left=left, height=0.6, color=colors[i], edgecolor="white")
+    # annotation - percent + approximate absolute number
+    abs_count = segments_abs[label]
+    annotation = f"{size:.1f}%\n{abs_count:,}"
+    center = left + size / 2
+    # place annotation inside if there's enough room, otherwise above
+    if size >= 6:
+        ax.text(center, 0, annotation, ha="center", va="center", fontsize=9, weight="semibold")
+    else:
+        ax.text(center, 0.9, annotation, ha="center", va="center", fontsize=8)
+        ax.annotate('', xy=(center, 0.28), xytext=(center, 0.82),
+                    arrowprops=dict(arrowstyle='-', lw=0.8, color='gray'))
+    left += size
+
+ax.set_xlim(0, 100)
+ax.set_ylim(-0.6, 1.2)
+ax.set_yticks([])
+ax.set_xlabel("Share of total population (%)")
+ax.set_title("Uganda — Age Structure (single graphical snapshot, 2024–2025 estimates)", fontsize=13, weight="bold")
+
+# Summary textbox (median age, youth share, under-18, adults 35+, dependency ratio)
+summary_text = (
+    f"Median age: {median_age}\n\n"
+    f"Youth (under 35): {pct_under_35:.1f}% (~{int(round(pct_under_35/100*population_est)):,})\n"
+    f"Under-18 (0-17): {pct_under_18:.1f}% (~{int(round(pct_under_18/100*population_est)):,})\n"
+    f"Adults 35+: {pct_35_plus:.1f}% (~{int(round(pct_35_plus/100*population_est)):,})\n"
+    f"Dependency ratio: {dependency_ratio} dependents per 100 working-age adults"
+)
+textbox_props = dict(boxstyle="round,pad=0.6", facecolor="#f7f7f7", edgecolor="#cccccc")
+ax.text(102, 0.45, summary_text, fontsize=9, va="center", bbox=textbox_props)
+
+# Clean up spines and layout
+for spine in ["top", "right", "left"]:
+    ax.spines[spine].set_visible(False)
+ax.spines["bottom"].set_color("#dddddd")
+plt.tight_layout()
+
+# -----------------------
+# STEP 4: SAVE & SHOW
+# -----------------------
+output_path = "uganda_age_structure_single_snapshot.png"
+plt.savefig(output_path, dpi=180, bbox_inches="tight")
+plt.show()
+
+plt.savefig("charts/uganda_age_structure.png")
+
+# python code here
+```
